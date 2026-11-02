@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#b5352a"/>
+  <rect x="64" y="104" width="384" height="344" rx="22" fill="#fbfaf7"/>
+  <g fill="#b5352a"><circle cx="160" cy="104" r="16"/><circle cx="256" cy="104" r="16"/><circle cx="352" cy="104" r="16"/></g>
+  <text x="256" y="372" text-anchor="middle" font-size="236" font-weight="700" fill="#1f1d1b"
+    font-family="'Noto Serif TC','Noto Serif SC','Songti TC','PMingLiU','SimSun',serif">字</text>
+</svg>

@@ -1,0 +1,525 @@
+<div class="wrap">
+  <header class="mast">
+    <h1><span>Daily Hanzi</span> <span class="zh">Nov 2026 – Mar 2028</span></h1>
+    <div class="legend">
+      <span><b>简</b> simplified</span><span><b>繁</b> traditional</span>
+      <span class="m"><b>Mandarin</b> · pinyin</span><span class="c"><b>Cantonese</b> · Jyutping</span>
+    </div>
+  </header>
+
+  <article class="sheet" id="sheet" aria-live="polite">
+    <div class="datecol">
+      <div class="mon" id="mon">November 2026</div>
+      <div class="monzh" id="monzh">十一月</div>
+      <div class="num" id="num">1</div>
+      <div class="wk" id="wk">Sunday</div>
+      <div class="wkzh" id="wkzh">星期日</div>
+      <div class="fest" id="fest" hidden></div>
+      <div class="doy" id="doy"></div>
+    </div>
+    <div class="wordcol" id="wordcol">
+      <div class="topline"><div class="theme" id="theme"></div><div class="pinned" id="pinned" hidden></div></div>
+      <div id="entries"></div>
+      <section class="writer" id="writer" aria-label="Stroke order and writing practice"></section>
+      <div class="controls">
+        <div class="nav">
+          <button class="btn" id="prev" type="button">← Previous</button>
+          <button class="btn" id="next" type="button">Next →</button>
+          <button class="btn" id="todayb" type="button">Today</button>
+        </div>
+        <button class="btn learn" id="learn" type="button" aria-pressed="false">Mark day as done</button>
+      </div>
+    </div>
+  </article>
+
+  <section class="board" aria-label="Month view">
+    <div class="boardhead">
+      <h2 id="mtitle"></h2>
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="months" id="months" role="tablist" aria-label="Months"></div>
+    <div class="gridwrap"><div class="grid" id="grid"></div></div>
+  </section>
+
+  <footer class="foot">
+    <div>Monday to Friday each bring three new words: a <span class="k kn">noun</span>, a <span class="k kv">verb</span>, and <span class="k ko">another kind of word</span> (adjective, adverb, measure word, pronoun, phrase and so on). Saturday lists the week’s 15 words for review; Sunday turns them into a self-test.</div>
+    <div>Each 2027 month teaches its theme’s most commonly used words. November and December 2026 are a warm-up with the next most common words from every theme, and January to March 2028 finish with the less common ones. When a festival falls on a weekend, its words come on the nearest weekday.</div>
+    <div>Cantonese uses traditional characters in Hong Kong and Macau. Where everyday spoken Cantonese prefers a different word, it is shown under “In spoken Cantonese”. Jyutping tones: 1 high · 2 high rising · 3 mid · 4 low falling · 5 low rising · 6 low.</div>
+    <div>Use ← → keys to flip days. Days you mark as done are saved in this browser only.</div>
+    <div>Stroke-order animation and writing checks by <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a>; stroke data from Make Me a Hanzi, based on Arphic fonts (Arphic Public License).</div>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js"></script>
+<script>
+/*WORDS*/
+
+const POS = {
+  n: ["Noun", "名词", "名詞"], v: ["Verb", "动词", "動詞"],
+  adj: ["Adjective", "形容词", "形容詞"], adv: ["Adverb", "副词", "副詞"],
+  conj: ["Conjunction", "连词", "連詞"], prep: ["Preposition", "介词", "介詞"],
+  pron: ["Pronoun", "代词", "代詞"], mw: ["Measure word", "量词", "量詞"],
+  num: ["Number", "数词", "數詞"], quant: ["Quantity", "数量词", "數量詞"],
+  loc: ["Direction / position", "方位词", "方位詞"], interj: ["Interjection", "叹词", "嘆詞"],
+  particle: ["Particle", "助词", "助詞"], phrase: ["Set phrase", "常用语", "常用語"]
+};
+// Festivals by real date (key: y-m-d)
+const FEST = {
+  "2026-12-22":"Winter Solstice","2026-12-24":"Christmas Eve","2026-12-25":"Christmas Day","2026-12-31":"New Year’s Eve",
+  "2027-1-1":"New Year’s Day","2027-2-6":"Lunar New Year","2027-2-14":"Valentine’s Day","2027-2-20":"Lantern Festival",
+  "2027-3-21":"Spring equinox","2027-4-5":"Qingming Festival","2027-5-1":"Labour Day","2027-6-9":"Dragon Boat Festival",
+  "2027-6-21":"Summer solstice","2027-9-15":"Mid-Autumn Festival","2027-10-1":"National Day","2027-10-31":"Halloween",
+  "2027-12-22":"Winter Solstice","2027-12-24":"Christmas Eve","2027-12-25":"Christmas Day","2027-12-31":"New Year’s Eve",
+  "2028-1-1":"New Year’s Day","2028-1-26":"Lunar New Year","2028-2-9":"Lantern Festival","2028-2-14":"Valentine’s Day",
+  "2028-3-20":"Spring equinox"
+};
+// Festival words whose day is a weekend move to the nearest weekday in the same month: original 2027 day -> lesson day
+const MOVES = { "2-6":"2-5", "2-14":"2-15", "2-20":"2-19", "3-21":"3-22", "5-1":"5-3", "10-31":"10-29", "12-25":"12-27" };
+// Festival foods and customs, pinned to a 2027 weekday next to their festival: "class:simplified" -> "m-d"
+const FEST_WORDS = {
+  "n:春联":"2-2", "v:贴":"2-2", "n:鞭炮":"2-3", "n:饺子":"2-4", "v:团圆":"2-4", "n:红包":"2-8", "o:恭喜发财":"2-8",
+  "n:灯笼":"2-18", "n:龙舟":"6-8", "n:粽子":"6-10", "n:月饼":"9-14", "n:南瓜":"10-28",
+  "n:汤圆":"12-21", "v:吃汤圆":"12-21", "n:烟花":"12-30", "v:倒数":"12-30"
+};
+const WK_EN = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WK_SH = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const WK_ZH = "日一二三四五六";
+const MON_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON_ZH = ["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+
+function parse(text, withPos) {
+  return text.trim().split("\n").map(l => {
+    const f = l.split("|");
+    const pos = withPos ? f.shift() : null;
+    const [sc, tc, py, jp, en, note] = f;
+    return { pos, sc, tc, py, jp, en, note };
+  });
+}
+/*SCORES*/
+const themeZh = M => M.tsc === M.ttc ? M.ttc : `${M.tsc} · ${M.ttc}`;
+const SCORE = {};
+for (const c in SCORES) SCORE[c] = Object.fromEntries(SCORES[c].split(/\s+/).filter(Boolean).map(s => [s.slice(0, -1), +s.slice(-1)]));
+
+// WORDS[c][m] = that month's words of class c (n, v, o), each tagged with its month (mi), position (di) and commonness
+const CATS = ["n", "v", "o"];
+const WORDS = { n: [], v: [], o: [] };
+MONTHS.forEach((M, mi) => {
+  const lists = { n: parse(M.n), v: parse(M.v), o: parse(M.o, true) };
+  for (const c of CATS) WORDS[c][mi] = lists[c].map((w, di) =>
+    Object.assign(w, { pos: w.pos || c, cat: c, mi, di, score: SCORE[c][w.sc] ?? 3 }));
+});
+
+// ---------- Schedule: every date from 1 Nov 2026 to 26 Mar 2028 ----------
+const START = new Date(2026, 10, 1), END = new Date(2028, 2, 26);
+const ymd = t => `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`;
+const addDays = (t, n) => new Date(t.getFullYear(), t.getMonth(), t.getDate() + n);
+const isWeekend = t => t.getDay() === 0 || t.getDay() === 6;
+const weekdaysIn = (from, to) => { const r = []; for (let t = new Date(from); t <= to; t = addDays(t, 1)) if (!isWeekend(t)) r.push(ymd(t)); return r; };
+const byCommon = (a, b) => a.score - b.score || a.mi - b.mi || a.di - b.di;
+const byDate = (a, b) => a.mi - b.mi || a.di - b.di;
+
+const lessonWords = {};        // date key -> [noun, verb, other]
+const pinnedFrom = {};         // lesson key -> "m-d" of the weekend festival it prepares for
+const leftovers = { n: [], v: [], o: [] };
+const put = (key, w) => (lessonWords[key] ||= [])[CATS.indexOf(w.cat)] = w;
+
+// 2027: each month keeps its most common words for its weekdays. Festival-day words always stay,
+// on the festival itself or the nearest weekday (MOVES); the rest keep their order through the month.
+MONTHS.forEach((M, mi) => {
+  const days = weekdaysIn(new Date(2027, mi, 1), new Date(2027, mi + 1, 0));
+  const pins = {};             // word position -> lesson key
+  for (const fk in FEST) {
+    const [y, fm, fd] = fk.split("-").map(Number);
+    if (y !== 2027 || fm !== mi + 1) continue;
+    const target = MOVES[`${fm}-${fd}`] ? `2027-${MOVES[`${fm}-${fd}`]}` : fk;
+    if (target !== fk) pinnedFrom[target] = `${fm}-${fd}`;
+    pins[fd - 1] = target;
+  }
+  for (const c of CATS) {
+    const list = WORDS[c][mi], placed = new Map();
+    list.forEach(w => {
+      const fw = FEST_WORDS[`${c}:${w.sc}`];
+      if (w.di in pins) placed.set(w, pins[w.di]);
+      else if (fw && fw.startsWith(`${mi + 1}-`)) placed.set(w, `2027-${fw}`);
+    });
+    placed.forEach((k, w) => put(k, w));
+    const taken = new Set(placed.values());
+    const free = days.filter(k => !taken.has(k));
+    const rest = list.filter(w => !placed.has(w)).sort(byCommon);
+    rest.slice(0, free.length).sort(byDate).forEach((w, i) => put(free[i], w));
+    leftovers[c].push(...rest.slice(free.length));
+  }
+});
+// Warm-up (Nov–Dec 2026) gets the most common leftovers; the least common continue in 2028.
+const warmDays = weekdaysIn(START, new Date(2026, 11, 31));
+const bonusDays = weekdaysIn(new Date(2028, 0, 1), END);
+for (const c of CATS) {
+  const ranked = leftovers[c].sort(byCommon);
+  ranked.slice(0, warmDays.length).sort(byDate).forEach((w, i) => put(warmDays[i], w));
+  ranked.slice(warmDays.length).sort(byDate).forEach((w, i) => put(bonusDays[i], w));
+}
+const lessonSet = {};
+for (const k in lessonWords) {
+  const M = MONTHS[lessonWords[k][0].mi];
+  lessonSet[k] = { words: lessonWords[k], theme: M.theme, themeZh: themeZh(M) };
+}
+
+const DAYS = [];               // ordered list of { date, key, type: learn|review|test|preview, set?, refs? }
+const BY_KEY = {};
+let lessonNo = 0;
+for (let t = new Date(START); t <= END; t = addDays(t, 1)) {
+  const key = ymd(t), dow = t.getDay();
+  let day;
+  if (!isWeekend(t)) day = { type: "learn", set: lessonSet[key], lesson: ++lessonNo };
+  else if (+t === +START) day = { type: "preview", refs: [1, 2, 3, 4, 5].map(i => ymd(addDays(t, i))) };
+  else {
+    const fri = addDays(t, dow === 6 ? -1 : -2);
+    day = { type: dow === 6 ? "review" : "test", refs: [4, 3, 2, 1, 0].map(i => ymd(addDays(fri, -i))) };
+  }
+  Object.assign(day, { date: t, key, idx: DAYS.length });
+  DAYS.push(day); BY_KEY[key] = day;
+}
+const TOTAL_LESSONS = lessonNo;
+
+// ---------- Rendering ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const STORE_KEY = "hanzi-2026-27-done";
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; } },
+  set(v) { try { localStorage.setItem(STORE_KEY, JSON.stringify(v)); } catch {} }
+};
+let done = new Set(store.get());
+const todayKey = ymd(new Date());
+// Each day has its own link: #dYYYY-MM-DD
+const pad2 = n => String(n).padStart(2, "0");
+const dayHash = d => `d${d.date.getFullYear()}-${pad2(d.date.getMonth() + 1)}-${pad2(d.date.getDate())}`;
+function dayFromHash() {
+  const m = location.hash.match(/^#d(\d{4})-(\d{2})-(\d{2})$/);
+  const d = m && BY_KEY[`${+m[1]}-${+m[2]}-${+m[3]}`];
+  return d ? d.idx : null;
+}
+let cur = dayFromHash() ?? (BY_KEY[todayKey] ? BY_KEY[todayKey].idx : 0);
+let viewMonth = null;          // { y, m } shown in the board
+const shortDate = t => `${WK_SH[t.getDay()]} ${t.getDate()} ${MON_EN[t.getMonth()].slice(0, 3)}`;
+const posName = w => POS[w.pos][0];
+const posCls = w => w.pos === "n" ? "n" : w.pos === "v" ? "v" : "o";
+
+function noteHtml(note) {
+  const [hz, ...rest] = note.split(" ");
+  const tail = rest.join(" ");
+  const m = tail.match(/^([a-z0-9 ]+?)(\s*[(·].*)?$/);
+  return `In spoken Cantonese: <b>${esc(hz)}</b> <code>${esc(m ? m[1] : tail)}</code>${m && m[2] ? " " + esc(m[2].trim()) : ""}`;
+}
+const sayBtns = id => `<button class="say" type="button" data-w="${id}" data-l="m" aria-label="Listen in Mandarin">▶ 普</button><button class="say" type="button" data-w="${id}" data-l="c" aria-label="Listen in Cantonese">▶ 粵</button>`;
+
+function entryHtml(w, id) {
+  const p = POS[w.pos], same = w.sc === w.tc;
+  return `<section class="entry ${posCls(w)}${same ? " same" : ""}">
+    <div class="chars">
+      <div class="form sc"><span class="lab">简 simplified</span><span class="hz" lang="zh-Hans">${esc(w.sc)}</span></div>
+      <div class="form tc"><span class="lab">繁 traditional</span><span class="hz" lang="zh-Hant">${esc(w.tc)}</span></div>
+    </div>
+    <div class="info">
+      <div class="headline"><span class="pos">${p[0]}<i>${p[1] === p[2] ? p[1] : p[1] + " / " + p[2]}</i></span><p class="meaning">${esc(w.en)}</p></div>
+      <div class="rom">
+        <span class="who m">Mandarin</span><span class="py">${esc(w.py)}</span><button class="say" type="button" data-w="${id}" data-l="m">▶ Listen</button>
+        <span class="who c">Cantonese</span><span class="jp">${esc(w.jp)}</span><button class="say" type="button" data-w="${id}" data-l="c">▶ Listen</button>
+      </div>
+      ${w.note ? `<p class="colloq">${noteHtml(w.note)}</p>` : ""}
+    </div>
+  </section>`;
+}
+
+let onScreen = [];             // words currently shown, indexed by data-w
+function listHtml(refs) {
+  return refs.map(k => {
+    const d = BY_KEY[k];
+    return `<div class="rvday"><h3>${shortDate(d.date)} <span>· ${esc(d.set.theme)}</span></h3>${d.set.words.map(w => {
+      const id = onScreen.push(w) - 1;
+      return `<div class="rvrow ${posCls(w)}"><span class="hz">${esc(w.tc)}${w.sc !== w.tc ? `<small>${esc(w.sc)}</small>` : ""}</span>
+        <span class="p">${posName(w)}</span><span class="py">${esc(w.py)}</span><span class="jp">${esc(w.jp)}</span>
+        <span class="en">${esc(w.en)}</span><span class="says">${sayBtns(id)}</span></div>`;
+    }).join("")}</div>`;
+  }).join("");
+}
+function testHtml(refs) {
+  const cards = refs.flatMap(k => BY_KEY[k].set.words).map(w => {
+    const id = onScreen.push(w) - 1;
+    return `<button type="button" class="card ${posCls(w)}" data-w="${id}">
+      <span class="hz">${esc(w.tc)}${w.sc !== w.tc ? `<small>${esc(w.sc)}</small>` : ""}</span>
+      <span class="hint">${posName(w)} · tap to check</span>
+      <span class="ans"><span class="py">${esc(w.py)}</span><span class="jp">${esc(w.jp)}</span>${esc(w.en)}</span></button>`;
+  }).join("");
+  return `<div class="testbar"><p>Say each word in Mandarin and Cantonese and give its meaning, then tap the card to check.</p>
+    <button class="btn" type="button" id="revealall">Show all answers</button></div><div class="cards">${cards}</div>`;
+}
+
+function renderSheet() {
+  const day = DAYS[cur], t = day.date;
+  onScreen = [];
+  $("sheet").classList.toggle("weekend", day.type !== "learn");
+  $("mon").textContent = `${MON_EN[t.getMonth()]} ${t.getFullYear()}`; $("monzh").textContent = MON_ZH[t.getMonth()];
+  $("num").textContent = t.getDate();
+  $("wk").textContent = WK_EN[t.getDay()]; $("wkzh").textContent = "星期" + WK_ZH[t.getDay()];
+  const f = FEST[day.key]; $("fest").hidden = !f; $("fest").textContent = f || "";
+  const pin = pinnedFrom[day.key];
+  $("pinned").hidden = !pin;
+  if (pin) { const [pm, pd] = pin.split("-").map(Number); $("pinned").textContent = `For ${FEST["2027-" + pin]} · ${shortDate(new Date(2027, pm - 1, pd))}`; }
+  if (day.type === "learn") {
+    $("doy").textContent = `Lesson ${day.lesson} of ${TOTAL_LESSONS}`;
+    $("theme").innerHTML = `${esc(day.set.theme)} <span>· ${day.set.themeZh}</span>`;
+    $("entries").innerHTML = day.set.words.map(w => entryHtml(w, onScreen.push(w) - 1)).join("");
+  } else {
+    const first = BY_KEY[day.refs[0]].date, last = BY_KEY[day.refs[4]].date;
+    const range = `${shortDate(first)} – ${shortDate(last)}`;
+    if (day.type === "preview") {
+      $("doy").textContent = "Start here";
+      $("theme").innerHTML = `Preview <span>· 预习 / 預習</span>`;
+      $("entries").innerHTML = `<p class="rvintro">Welcome. Each weekday brings three new words; each weekend goes back over them. Here is a first look at this week’s 15 words, ${range}.</p>` + listHtml(day.refs);
+    } else if (day.type === "review") {
+      $("doy").textContent = "Weekend review";
+      $("theme").innerHTML = `Week review <span>· 复习 / 複習</span>`;
+      $("entries").innerHTML = `<p class="rvintro">No new words today. Read through this week’s 15 words (${range}) and listen to each one in both languages.</p>` + listHtml(day.refs);
+    } else {
+      $("doy").textContent = "Weekend self-test";
+      $("theme").innerHTML = `Self-test <span>· 自测 / 自測</span>`;
+      $("entries").innerHTML = testHtml(day.refs);
+    }
+  }
+  setupWriter(day.type === "learn" ? day.set.words : day.refs.flatMap(k => BY_KEY[k].set.words), day.type !== "test");
+  if (!synth) document.querySelectorAll(".say").forEach(b => b.hidden = true);
+  renderDone();
+  $("prev").disabled = cur === 0; $("next").disabled = cur === DAYS.length - 1;
+  const wc = $("wordcol"); wc.classList.remove("flip"); void wc.offsetWidth; wc.classList.add("flip");
+}
+
+const MONTH_LIST = [{ y: 2026, m: 10 }, { y: 2026, m: 11 }, ...Array.from({ length: 12 }, (_, m) => ({ y: 2027, m })),
+  { y: 2028, m: 0 }, { y: 2028, m: 1 }, { y: 2028, m: 2 }];
+const MONTH_THEME = { 2026: "Warm-up: common words from every theme", 2028: "Bonus words: the rest of every theme" };
+function renderMonths() {
+  $("months").innerHTML = MONTH_LIST.map(({ y, m }, i) =>
+    `<button type="button" role="tab" data-i="${i}" aria-current="${y === viewMonth.y && m === viewMonth.m}">${MON_EN[m].slice(0, 3)} ’${String(y).slice(2)}<span>${MON_ZH[m]}</span></button>`).join("");
+}
+
+function renderGrid() {
+  const { y, m } = viewMonth;
+  const theme = MONTH_THEME[y] || MONTHS[m].theme;
+  $("mtitle").innerHTML = `${MON_EN[m]} ${y} · ${esc(theme)}${y === 2027 ? ` <span>${themeZh(MONTHS[m])}</span>` : ""}`;
+  const first = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
+  let html = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((n, i) =>
+    `<div class="wkh">${n}<span>${"一二三四五六日"[i]}</span></div>`).join("");
+  html += '<div class="pad"></div>'.repeat(first);
+  const len = new Date(y, m + 1, 0).getDate();
+  let count = 0;
+  let inRange = 0;
+  for (let d = 1; d <= len; d++) {
+    const day = BY_KEY[`${y}-${m + 1}-${d}`];
+    if (!day) { html += `<div class="day wkend" aria-hidden="true"><span class="d">${d}</span></div>`; continue; }
+    inRange++;
+    if (done.has(day.key)) count++;
+    const cls = ["day", day.type !== "learn" ? "wkend" : "", FEST[day.key] || pinnedFrom[day.key] ? "fest" : "",
+      done.has(day.key) ? "learned" : "", day.key === todayKey ? "today" : ""].join(" ");
+    let body, title;
+    if (day.type === "learn") {
+      const [n, v, o] = day.set.words;
+      body = `<span class="w n">${esc(n.tc)}</span><span class="w v">${esc(v.tc)}</span><span class="w o">${esc(o.tc)}</span>`;
+      title = `${n.en} · ${v.en} · ${o.en}`;
+    } else {
+      const lab = { preview: ["预习", "Preview"], review: ["复习", "Review"], test: ["自测", "Self-test"] }[day.type];
+      body = `<span class="rvlab">${lab[0]}<small>${lab[1]}</small></span>`;
+      title = lab[1];
+    }
+    if (FEST[day.key]) title += ` — ${FEST[day.key]}`;
+    html += `<button type="button" class="${cls}" data-i="${day.idx}" ${day.idx === cur ? 'aria-current="date"' : ""}
+      title="${esc(title)}"><span class="d">${d}</span>${body}</button>`;
+  }
+  $("grid").innerHTML = html;
+  $("progress").textContent = `${count} of ${inRange} days done this month · ${done.size} of ${DAYS.length} overall`;
+}
+
+function go(i) {
+  cur = i;
+  const t = DAYS[i].date; viewMonth = { y: t.getFullYear(), m: t.getMonth() };
+  try { history.replaceState(null, "", "#" + dayHash(DAYS[i])); } catch {}
+  renderSheet(); renderMonths(); renderGrid();
+}
+addEventListener("hashchange", () => { const i = dayFromHash(); if (i !== null && i !== cur) go(i); });
+
+// Speech: Mandarin reads the simplified form, Cantonese the traditional form.
+const synth = window.speechSynthesis;
+function speak(text, lang) {
+  if (!synth) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = .8;
+  const v = synth.getVoices().find(v => v.lang.replace("_", "-").toLowerCase().startsWith(lang.toLowerCase()));
+  if (v) u.voice = v;
+  synth.speak(u);
+}
+
+$("prev").onclick = () => cur > 0 && go(cur - 1);
+$("next").onclick = () => cur < DAYS.length - 1 && go(cur + 1);
+$("todayb").onclick = () => go(BY_KEY[todayKey] ? BY_KEY[todayKey].idx : 0);
+if (!BY_KEY[todayKey]) $("todayb").textContent = "Start";
+$("learn").onclick = () => {
+  const k = DAYS[cur].key;
+  done.has(k) ? done.delete(k) : done.add(k);
+  store.set([...done]); renderDone(); renderGrid();
+};
+function renderDone() {
+  const k = DAYS[cur].key;
+  $("learn").setAttribute("aria-pressed", done.has(k));
+  $("learn").textContent = done.has(k) ? "✓ Done" : "Mark day as done";
+}
+
+// ---------- Stroke order (watch) and writing practice (write), using Hanzi Writer ----------
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isHan = ch => /\p{Script=Han}/u.test(ch);
+const strokeShards = {};
+function loadChar(ch, onLoad, onError) {
+  const i = ch.codePointAt(0) % 32;
+  (strokeShards[i] ||= fetch(`strokes/s${i}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }))
+    .then(s => s[ch] ? onLoad(s[ch]) : onError(new Error("No stroke data for " + ch)))
+    .catch(e => { delete strokeShards[i]; onError(e); });
+}
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const W = { words: [], sel: 0, guide: true, gen: 0, watchers: [], quizzer: null, qi: 0, mistakes: 0,
+  script: (() => { try { return localStorage.getItem("hanzi-script") || "tc"; } catch { return "tc"; } })() };
+const gridSvg = '<svg class="guides" viewBox="0 0 100 100" aria-hidden="true"><path d="M0 0L100 100M100 0L0 100M50 0V100M0 50H100"/></svg>';
+const opts = size => ({ width: size, height: size, padding: Math.round(size * .06), charDataLoader: loadChar,
+  strokeColor: tok("--ink"), outlineColor: tok("--rule"), highlightColor: tok("--cinnabar"),
+  drawingColor: tok("--canto"), radicalColor: null, strokeAnimationSpeed: 1, delayBetweenStrokes: 220 });
+// Mandarin reads the simplified form, Cantonese the traditional form, whichever script is being written
+const sayPair = w => synth ? `<button class="btn say-m" type="button" data-say="m" title="${esc(w.py)}">▶ 普 Mandarin</button>
+  <button class="btn say-c" type="button" data-say="c" title="${esc(w.jp)}">▶ 粵 Cantonese</button>` : "";
+const chosenChars = () => [...W.words[W.sel][W.script]].filter(isHan);
+
+function setupWriter(words, guide) {
+  W.words = words; W.sel = 0; W.guide = guide;
+  drawWriter();
+}
+function drawWriter() {
+  const gen = ++W.gen, w = W.words[W.sel], el = $("writer");
+  if (W.quizzer) { try { W.quizzer.cancelQuiz(); } catch {} }
+  W.quizzer = null; W.watchers = [];
+  el.innerHTML = `<div class="wr-head"><h3>Stroke order &amp; writing<span>筆順 · 書寫</span></h3>
+      <div class="seg" role="group" aria-label="Characters to write">
+        <button type="button" data-script="sc" aria-pressed="${W.script === "sc"}">简 Simplified</button>
+        <button type="button" data-script="tc" aria-pressed="${W.script === "tc"}">繁 Traditional</button></div></div>
+    ${W.words.length > 1 ? `<div class="chips" role="group" aria-label="Word">${W.words.map((x, i) =>
+      `<button type="button" class="chip ${posCls(x)}" data-sel="${i}" aria-pressed="${i === W.sel}" title="${esc(x.en)}">${esc(x[W.script])}</button>`).join("")}</div>` : ""}
+    <div class="wr-panels">
+      <div class="wr-panel"><div class="wr-lab">Watch · 看<span>${esc(w[W.script])} · ${esc(w.en)}</span></div>
+        <div class="watch" id="watch"></div>
+        <div class="wr-btns"><button class="btn" type="button" id="wplay">▶ Play strokes</button>${sayPair(w)}</div></div>
+      <div class="wr-panel"><div class="wr-lab">Write · 寫<span>draw each stroke in order</span></div>
+        <div class="quiz-row" id="qrow"></div>
+        <div class="quiz" id="quiz"></div>
+        <div class="wr-btns">
+          <button class="btn toggle" type="button" id="qguide" aria-pressed="${W.guide}">Guide</button>
+          <button class="btn" type="button" id="qreset">Start over</button>${sayPair(w)}</div>
+        <p class="qstatus" id="qstatus" aria-live="polite"></p></div>
+    </div>`;
+  if (!window.HanziWriter) {
+    $("watch").innerHTML = $("quiz").innerHTML = "";
+    $("qstatus").textContent = "The writing tool could not load. Check your connection and reload the page.";
+    return;
+  }
+  const chars = chosenChars();
+  const wsize = chars.length > 3 ? 78 : 96;
+  $("watch").innerHTML = chars.map(() => `<div class="hzbox" style="width:${wsize}px;height:${wsize}px">${gridSvg}<div class="hw"></div></div>`).join("");
+  $("watch").querySelectorAll(".hw").forEach((hw, i) => {
+    W.watchers.push(HanziWriter.create(hw, chars[i], opts(wsize)));
+  });
+  const qsize = Math.min(220, Math.max(160, $("quiz").parentElement.clientWidth - 4 || 220));
+  $("quiz").innerHTML = `<div class="hzbox" style="width:${qsize}px;height:${qsize}px">${gridSvg}<div class="hw" id="qhw"></div></div>`;
+  W.quizzer = HanziWriter.create($("qhw"), chars[0], { ...opts(qsize), showCharacter: false, showOutline: W.guide });
+  W.qi = 0; W.mistakes = 0;
+  startQuiz(gen);
+  if (!reduceMotion) playStrokes(gen);
+}
+
+async function playStrokes(gen) {
+  for (const wr of W.watchers) { wr.hideCharacter(); }
+  for (const wr of W.watchers) {
+    if (gen !== W.gen) return;
+    try { await wr.animateCharacter(); } catch { return; }
+  }
+}
+
+function quizRow() {
+  const chars = chosenChars();
+  $("qrow").innerHTML = chars.length > 1 ? chars.map((c, i) =>
+    `<span class="mini ${i < W.qi ? "done" : i === W.qi ? "cur" : ""}">${i < W.qi ? esc(c) : i === W.qi ? "?" : "·"}</span>`).join("") : "";
+}
+function startQuiz(gen) {
+  const chars = chosenChars();
+  quizRow();
+  $("qstatus").className = "qstatus";
+  $("qstatus").textContent = chars.length > 1 ? `Character ${W.qi + 1} of ${chars.length}` : "Write the character, one stroke at a time.";
+  W.quizzer.quiz({
+    showHintAfterMisses: 2, highlightOnComplete: true,
+    onMistake: () => { if (gen === W.gen) $("qstatus").textContent = "Not quite. Check the stroke order and try again."; },
+    onCorrectStroke: s => { if (gen === W.gen) $("qstatus").textContent = `Stroke ${s.strokeNum + 1} ✓ · ${s.strokesRemaining} to go`; },
+    onComplete: s => {
+      if (gen !== W.gen) return;
+      W.mistakes += s.totalMistakes;
+      if (W.qi < chars.length - 1) {
+        W.qi++;
+        setTimeout(() => { if (gen !== W.gen) return; W.quizzer.setCharacter(chars[W.qi]).then(() => { if (gen === W.gen) startQuiz(gen); }); }, 700);
+      } else {
+        W.qi = chars.length; quizRow();
+        $("qstatus").className = "qstatus good";
+        $("qstatus").textContent = W.mistakes === 0 ? `Written perfectly: ${W.words[W.sel][W.script]} ✓` : `Done: ${W.words[W.sel][W.script]} ✓ (${W.mistakes} slip${W.mistakes === 1 ? "" : "s"}). Start over to try again.`;
+      }
+    }
+  });
+}
+
+$("writer").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.say) {
+    const w = W.words[W.sel];
+    b.dataset.say === "m" ? speak(w.sc, "zh-CN") : speak(w.tc, "zh-HK");
+  } else if (b.dataset.script) {
+    W.script = b.dataset.script;
+    try { localStorage.setItem("hanzi-script", W.script); } catch {}
+    drawWriter();
+  } else if (b.dataset.sel) { W.sel = +b.dataset.sel; drawWriter(); }
+  else if (b.id === "wplay") { const g = W.gen; playStrokes(g); }
+  else if (b.id === "qguide") {
+    W.guide = !W.guide; b.setAttribute("aria-pressed", W.guide);
+    W.guide ? W.quizzer.showOutline() : W.quizzer.hideOutline();
+  } else if (b.id === "qreset") {
+    const gen = ++W.gen, chars = chosenChars();
+    W.qi = 0; W.mistakes = 0;
+    W.quizzer.cancelQuiz();
+    W.quizzer.setCharacter(chars[0]).then(() => { if (gen !== W.gen) return; W.guide ? W.quizzer.showOutline() : W.quizzer.hideOutline(); startQuiz(gen); });
+  }
+};
+$("entries").onclick = e => {
+  const s = e.target.closest(".say");
+  if (s) { const w = onScreen[+s.dataset.w]; s.dataset.l === "m" ? speak(w.sc, "zh-CN") : speak(w.tc, "zh-HK"); return; }
+  const c = e.target.closest(".card");
+  if (c) { c.classList.toggle("open"); return; }
+  const r = e.target.closest("#revealall");
+  if (r) {
+    const open = r.textContent.startsWith("Show");
+    document.querySelectorAll(".card").forEach(x => x.classList.toggle("open", open));
+    r.textContent = open ? "Hide all answers" : "Show all answers";
+  }
+};
+$("months").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const { y, m } = MONTH_LIST[+b.dataset.i];
+  go(BY_KEY[`${y}-${m + 1}-1`].idx);
+};
+$("grid").onclick = e => { const b = e.target.closest(".day"); if (b) go(+b.dataset.i); };
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft" && cur > 0) go(cur - 1);
+  if (e.key === "ArrowRight" && cur < DAYS.length - 1) go(cur + 1);
+});
+
+go(cur);
+</script>
