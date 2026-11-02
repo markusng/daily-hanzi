@@ -98,6 +98,9 @@ button:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; 
 .rom .jp { font-family: var(--f-mono); font-size: .98rem; overflow-wrap: anywhere; }
 .say { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 1px 10px; font-size: .75rem; color: var(--muted); }
 .say:hover { color: var(--ink); border-color: var(--muted); }
+#notice { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50; max-width: 520px; margin: 0 auto;
+  background: var(--ink); color: var(--paper); border-radius: 8px; padding: 12px 16px; font-size: .9rem; line-height: 1.45; box-shadow: var(--shadow); }
+#notice[hidden] { display: none; }
 .colloq { margin: 2px 0 0; font-size: .9rem; color: var(--muted); border-left: 3px solid var(--canto); padding: 1px 0 1px 10px; }
 .colloq b { color: var(--canto); font-family: var(--f-tc); font-weight: 700; font-size: 1.05rem; }
 .colloq code { font-family: var(--f-mono); color: var(--ink); font-size: .88rem; }

@@ -347,14 +347,53 @@ function go(i) {
 addEventListener("hashchange", () => { const i = dayFromHash(); if (i !== null && i !== cur) go(i); });
 
 // Speech: Mandarin reads the simplified form, Cantonese the traditional form.
+// Uses the device's own voices. Without a Chinese voice the browser would read the
+// characters with an English voice, which stays silent, so say what's missing instead.
 const synth = window.speechSynthesis;
+const VOICE_MATCH = {
+  "zh-CN": [/^zh-cn/, /^cmn/, /^zh-hans/, /^zh-sg/, /^zh-tw/, /^zh$/],
+  "zh-HK": [/^zh-hk/, /^yue/, /^zh-hant-hk/, /^zh-mo/]
+};
+const VOICE_NAME = { "zh-CN": /mandarin|普通话|普通話|putonghua/i, "zh-HK": /cantonese|粵|粤|hong ?kong/i };
+let voices = [];
+const loadVoices = () => { voices = synth ? synth.getVoices() : []; };
+if (synth) { loadVoices(); synth.addEventListener?.("voiceschanged", loadVoices); }
+function findVoice(lang) {
+  if (!voices.length) loadVoices();
+  const norm = v => v.lang.replace(/_/g, "-").toLowerCase();
+  for (const re of VOICE_MATCH[lang]) { const v = voices.find(v => re.test(norm(v))); if (v) return v; }
+  return voices.find(v => VOICE_NAME[lang].test(v.name)) || null;
+}
+function voiceHelp(lang) {
+  const which = lang === "zh-HK" ? "Cantonese (Hong Kong)" : "Mandarin (Chinese, China)";
+  const ua = navigator.userAgent;
+  const how = /iPhone|iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+      ? `Settings → Accessibility → Spoken Content → Voices → Chinese, and add ${which}.`
+    : /Android/.test(ua)
+      ? "Settings → Text-to-speech output → Google speech engine → Install voice data, and add Chinese and Cantonese."
+    : /Macintosh/.test(ua)
+      ? `System Settings → Accessibility → Spoken Content → System voice → Manage Voices, and add ${which}.`
+    : /Windows/.test(ua)
+      ? "Open this page in Chrome or Edge, which include online Chinese voices, or add them in Windows Settings → Time & language → Speech → Add voices."
+      : `Add a ${which} text-to-speech voice in your device settings.`;
+  return `No ${which} voice on this device, so there is nothing to play. ${how} Then reload this page.`;
+}
+let noticeTimer;
+function notice(msg) {
+  let n = $("notice");
+  if (!n) { n = document.createElement("div"); n.id = "notice"; n.setAttribute("role", "status"); document.body.appendChild(n); }
+  n.textContent = msg; n.hidden = false;
+  clearTimeout(noticeTimer); noticeTimer = setTimeout(() => { n.hidden = true; }, 9000);
+}
 function speak(text, lang) {
   if (!synth) return;
-  synth.cancel();
+  const v = findVoice(lang);
+  if (!v) { notice(voiceHelp(lang)); return; }
+  if (synth.speaking || synth.pending) synth.cancel();
+  synth.resume(); // Chrome can be left paused after a page sits in the background
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang; u.rate = .8;
-  const v = synth.getVoices().find(v => v.lang.replace("_", "-").toLowerCase().startsWith(lang.toLowerCase()));
-  if (v) u.voice = v;
+  u.lang = v.lang; u.voice = v; u.rate = .8;
+  u.onerror = e => { if (e.error !== "interrupted" && e.error !== "canceled") notice(`Couldn't play the sound (${e.error}).`); };
   synth.speak(u);
 }
 
