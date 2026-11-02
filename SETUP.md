@@ -24,7 +24,7 @@ Every later push rebuilds the site and the calendar feed automatically.
 5. Back in **Editor**, choose `install` in the function menu on the toolbar, then click **Run**.
    - Click **Review permissions** and pick your Google account.
    - Google will warn that it "hasn't verified this app". This is your own script, so click **Advanced → Go to Daily Hanzi (unsafe)**.
-   - Click **Allow** to let it send email as you.
+   - Click **Allow**. It asks only to send email as you, see your email address (so it knows where to send) and run while you're away (for the 7 am trigger). It can't read your mailbox.
    - The log shows "Daily Hanzi will email … every day between 7 and 8 am".
 6. Optional: run `sendTestWeekday`, `sendTestSaturday` or `sendTestSunday` to get a sample email now. You can also run `sendToday` to get today's email.
 

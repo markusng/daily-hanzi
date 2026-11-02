@@ -15,7 +15,7 @@ const code = `/**
  *
  * One-time setup:
  *   1. Project Settings (gear icon): set "Time zone" to yours.
- *   2. Select the function "install" in the toolbar and click Run. Approve the Gmail permission.
+ *   2. Select the function "install" in the toolbar and click Run. Approve "Send email as you".
  *   3. Optional: run "sendTestWeekday" to get a sample email straight away.
  * To stop: run "uninstall".
  */
@@ -51,7 +51,8 @@ function sendFor_(key, isTest) {
   const day = DAYS.find(d => d.date === key);
   if (!day) { Logger.log("No Daily Hanzi entry for " + key + "; nothing sent."); return; }
   const mail = buildEmail(day, SITE_URL);
-  GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), (isTest ? "[Test] " : "") + mail.subject, mail.text,
+  // MailApp only needs permission to send email; the Gmail service would ask for full access to your mailbox.
+  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), (isTest ? "[Test] " : "") + mail.subject, mail.text,
     { htmlBody: mail.html, name: "Daily Hanzi" });
   Logger.log("Sent: " + mail.subject);
 }
